@@ -160,6 +160,8 @@ AutoStep/
 6. Layar tetap menyala selama floating panel tampil (flag keep-screen-on).
 
 ## Troubleshooting
+Kalau app crash, muncul layar **AutoStep crashed** -> tekan **COPY ERROR** -> kirim ke Claude.
+
 | Masalah | Solusi |
 |---|---|
 | Accessibility tidak bisa di-ON | Allow restricted settings (lihat atas) |
