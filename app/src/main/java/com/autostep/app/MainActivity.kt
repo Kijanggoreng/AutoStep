@@ -93,11 +93,18 @@ class MainActivity : Activity() {
         return row
     }
 
-    private fun isImeEnabled(): Boolean =
-        (Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_INPUT_METHODS) ?: "").contains(packageName)
+    private fun isImeEnabled(): Boolean = try {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.enabledInputMethodList.any { it.packageName == packageName }
+    } catch (e: Exception) {
+        false
+    }
 
-    private fun isImeSelected(): Boolean =
+    private fun isImeSelected(): Boolean = try {
         (Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD) ?: "").contains(packageName)
+    } catch (e: Exception) {
+        false
+    }
 
     private fun setupCard(): View {
         val c = card()
