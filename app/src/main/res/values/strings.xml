@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AutoStep</string>
+    <string name="a11y_description">Lets AutoStep perform the taps, holds and swipes you define in your scripts, and show its floating control panel.</string>
+</resources>
