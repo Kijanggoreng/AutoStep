@@ -24,17 +24,19 @@ Android SDK platform 34 required. The code was written without a compile check i
   Also owns `FloatingUi`.
 - `FloatingUi.kt` - overlay panel (`TYPE_ACCESSIBILITY_OVERLAY`, no SYSTEM_ALERT_WINDOW needed) and
   `PickerView` (fullscreen picker: POINT / SWIPE / REGION, returns raw screen coords).
-- `AutoKeyboardService.kt` - IME; `instance`; `send(KeyEvent)`, `commitText()` posted to main thread.
+- `AutoKeyboardService.kt` - real QWERTY IME (letters/shift, numbers, symbols, enter, backspace); `instance`; `send(KeyEvent)`, `commitText()` used by scripts, posted to main thread.
 - `Keys.kt` - `KeyInjector.press/typeText`; resolves random keys, `KeyCharacterMap` for shift/symbols;
   hold = DOWN + repeated DOWN(repeatCount++) every 50 ms + UP (UP always sent in `finally`).
-- `MainActivity.kt` - setup status, script card, step list, step editor dialog (`showEditor`).
+- `MainActivity.kt` - home screen (script card, step list, setup cards, help/welcome dialogs, restricted-settings guide).
+- `StepEditor.kt` - step form built only from plain views; used both in the app's AlertDialog and in the floating overlay (`FloatingUi.showForm`). Collapsed 'More options' = random ranges etc. Durations are edited in seconds.
+- `App.kt` / `CrashActivity.kt` - uncaught-exception handler -> crash screen with COPY ERROR (separate process).
 - `Ui.kt` - `Pal` colours and Context extensions `dp/rounded/label/pill/card`.
 
 ## Adding a new step type
 1. Add enum value in `StepType` (Model.kt) + fields on `Step` + JSON in `toJson/fromJson` + `title()`.
 2. Handle it in `Engine.execute` (exhaustive `when`).
-3. Add a branch in `MainActivity.showEditor` (`when (s.type)`) and `defaultStep`.
-4. Optional: quick-add button in `FloatingUi.build`.
+3. Add a branch in `StepEditor.build` (`when (s.type)`) and `MainActivity.defaultStep`.
+4. Optional: quick-add chip in `FloatingUi.build`.
 
 ## Conventions / gotchas
 - Never block the main thread: gestures/keys are executed from the Engine thread.
@@ -54,3 +56,10 @@ Shizuku mode for lower latency, Compose UI.
 ## Useful Claude skills (Claude Code)
 Drjacky/claude-android-ninja, dpconde/claude-android-skill, chrisbanes/skills, Google android/skills
 (Android CLI or `npx -y android-skills-mcp`). Install into `~/.claude/skills/` or `.claude/skills/`.
+
+## Release / CI
+- `build.yml`: debug APK on push/PR. `release.yml`: push tag `vX.Y.Z` -> release APK + SHA256SUMS on GitHub Releases.
+- Release signing via env vars KEYSTORE_PATH/KEYSTORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD (GitHub secrets KEYSTORE_BASE64 etc.);
+  falls back to the debug key. Bump versionCode/versionName and CHANGELOG.md before tagging.
+- Do not add the INTERNET permission or any analytics: "no network" is a promise in the README.
+- Android 14 gotcha: `Settings.Secure.ENABLED_INPUT_METHODS` is not readable (SecurityException) - use `InputMethodManager.enabledInputMethodList`.

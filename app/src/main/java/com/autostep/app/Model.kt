@@ -4,14 +4,14 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
 
-enum class StepType(val label: String) {
-    TAP("Tap"),
-    RANDOM_TAP("Random tap (in area)"),
-    HOLD("Hold"),
-    SWIPE("Swipe"),
-    KEY("Keyboard key"),
-    TEXT("Type text"),
-    WAIT("Wait")
+enum class StepType(val icon: String, val label: String, val desc: String) {
+    TAP("👆", "Tap", "Tap one exact spot"),
+    RANDOM_TAP("🎲", "Random tap", "Tap a random spot inside an area"),
+    HOLD("✋", "Hold", "Press and hold (seconds, random, or forever)"),
+    SWIPE("↔", "Swipe", "Drag from point A to point B"),
+    KEY("⌨", "Key press", "Press or hold a keyboard key (fixed or random)"),
+    TEXT("📝", "Type text", "Type a piece of text"),
+    WAIT("⏱", "Wait", "Pause for a while")
 }
 
 enum class KeyMode(val label: String) {
@@ -26,6 +26,13 @@ fun fmtMs(ms: Long): String =
     if (ms >= 1000) {
         if (ms % 1000 == 0L) "${ms / 1000}s" else String.format(Locale.US, "%.1fs", ms / 1000.0)
     } else "${ms}ms"
+
+fun secText(ms: Long): String =
+    if (ms % 1000 == 0L) (ms / 1000).toString()
+    else String.format(Locale.US, "%.3f", ms / 1000.0).trimEnd('0').trimEnd('.')
+
+fun parseSec(text: String, defMs: Long): Long =
+    text.trim().replace(',', '.').toDoubleOrNull()?.let { (it * 1000).toLong() } ?: defMs
 
 fun fmtRange(a: Long, b: Long): String = if (b > a) "${fmtMs(a)}-${fmtMs(b)}" else fmtMs(a)
 

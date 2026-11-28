@@ -26,7 +26,7 @@ enum class PickMode { POINT, SWIPE, REGION }
 
 data class PickResult(val x1: Int, val y1: Int, val x2: Int, val y2: Int)
 
-/** Draggable floating control panel + full-screen coordinate picker. */
+/** Draggable floating control panel, full-screen coordinate picker and in-overlay step form. */
 class FloatingUi(private val svc: AccessibilityService) {
     private val wm = svc.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val main = Handler(Looper.getMainLooper())
@@ -37,6 +37,7 @@ class FloatingUi(private val svc: AccessibilityService) {
     private var statusTv: TextView? = null
     private var lp: WindowManager.LayoutParams? = null
     private var picker: PickerView? = null
+    private var form: FrameLayout? = null
 
     val isShown: Boolean get() = root != null
 
@@ -52,6 +53,7 @@ class FloatingUi(private val svc: AccessibilityService) {
     fun hide() {
         Engine.removeListener(engineListener)
         closePicker()
+        closeForm()
         root?.let { try { wm.removeView(it) } catch (e: Exception) { } }
         root = null
         panel = null
@@ -75,10 +77,12 @@ class FloatingUi(private val svc: AccessibilityService) {
     private fun refresh() {
         val running = Engine.running
         runBtn?.let {
-            it.text = if (running) "Stop" else "Run"
+            it.text = if (running) "\u25A0 Stop" else "\u25B6 Run"
             it.background = svc.rounded(if (running) Pal.RED else Pal.GREEN, 12)
         }
-        statusTv?.text = Engine.status
+        val script = Store.current()
+        statusTv?.text = if (running) Engine.status
+        else "${script.name}: ${script.steps.size} steps  |  ${Engine.status}"
     }
 
     private fun build() {
@@ -106,7 +110,7 @@ class FloatingUi(private val svc: AccessibilityService) {
         header.orientation = LinearLayout.HORIZONTAL
         header.gravity = Gravity.CENTER_VERTICAL
 
-        val handle = c.label("::", 20f, Pal.MUTED, true)
+        val handle = c.label("\u2630", 20f, Pal.MUTED, true)
         handle.setPadding(c.dp(10), c.dp(4), c.dp(10), c.dp(4))
         handle.setOnTouchListener(object : View.OnTouchListener {
             var ox = 0
@@ -127,11 +131,11 @@ class FloatingUi(private val svc: AccessibilityService) {
             }
         })
 
-        val run = c.pill("Run", Pal.GREEN) { toggleRun() }
-        val more = c.pill("...", Pal.FIELD) {
+        val run = c.pill("\u25B6 Run", Pal.GREEN) { toggleRun() }
+        val more = c.pill("+ Steps", Pal.FIELD) {
             panel?.let { it.visibility = if (it.visibility == View.GONE) View.VISIBLE else View.GONE }
         }
-        val wrap = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        val wrap = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         wrap.leftMargin = c.dp(4)
         header.addView(handle)
         header.addView(run, wrap)
@@ -144,38 +148,49 @@ class FloatingUi(private val svc: AccessibilityService) {
         pn.setPadding(c.dp(4), c.dp(8), c.dp(4), c.dp(2))
         val st = c.label("Idle", 12f, Pal.MUTED)
         pn.addView(st)
-        pn.addView(c.label("Record step (pick on screen):", 12f, Pal.TEXT, true).apply { setPadding(0, c.dp(8), 0, c.dp(4)) })
+        pn.addView(c.label("Add a step (tap the screen to record):", 12f, Pal.TEXT, true)
+            .apply { setPadding(0, c.dp(8), 0, c.dp(4)) })
 
-        val rowA = LinearLayout(c)
-        rowA.orientation = LinearLayout.HORIZONTAL
-        fun add(row: LinearLayout, text: String, onClick: () -> Unit) {
-            val lpp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            lpp.rightMargin = c.dp(4)
-            lpp.bottomMargin = c.dp(4)
-            row.addView(c.pill(text, Pal.ACCENT, onClick), lpp)
-        }
-        add(rowA, "+Tap") { quickAdd(PickMode.POINT) { Step(StepType.TAP, x = it.x1, y = it.y1) } }
-        add(rowA, "+Random") {
-            quickAdd(PickMode.REGION) {
-                Step(StepType.RANDOM_TAP, x = min(it.x1, it.x2), y = min(it.y1, it.y2),
-                    x2 = max(it.x1, it.x2), y2 = max(it.y1, it.y2))
+        fun addRow(vararg items: Pair<String, () -> Unit>): LinearLayout {
+            val row = LinearLayout(c)
+            row.orientation = LinearLayout.HORIZONTAL
+            items.forEach { (text, action) ->
+                val l = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                l.rightMargin = c.dp(4)
+                l.bottomMargin = c.dp(4)
+                row.addView(c.chip(text, Pal.ACCENT, action), l)
             }
+            return row
         }
-        val rowB = LinearLayout(c)
-        rowB.orientation = LinearLayout.HORIZONTAL
-        add(rowB, "+Hold") { quickAdd(PickMode.POINT) { Step(StepType.HOLD, x = it.x1, y = it.y1, durationMs = 1000) } }
-        add(rowB, "+Swipe") {
-            quickAdd(PickMode.SWIPE) {
-                Step(StepType.SWIPE, x = it.x1, y = it.y1, x2 = it.x2, y2 = it.y2, durationMs = 300)
+        pn.addView(addRow(
+            "\uD83D\uDC46 Tap" to { quickAdd(PickMode.POINT) { Step(StepType.TAP, x = it.x1, y = it.y1) } },
+            "\uD83C\uDFB2 Random" to {
+                quickAdd(PickMode.REGION) {
+                    Step(StepType.RANDOM_TAP, x = min(it.x1, it.x2), y = min(it.y1, it.y2),
+                        x2 = max(it.x1, it.x2), y2 = max(it.y1, it.y2))
+                }
+            },
+            "\u270B Hold" to {
+                startPick(PickMode.POINT, 0) { res ->
+                    if (res != null) showForm(Step(StepType.HOLD, x = res.x1, y = res.y1, durationMs = 1000)) { addStep(it) }
+                }
+            },
+            "\u2194 Swipe" to {
+                quickAdd(PickMode.SWIPE) {
+                    Step(StepType.SWIPE, x = it.x1, y = it.y1, x2 = it.x2, y2 = it.y2, durationMs = 300)
+                }
             }
-        }
-        val rowC = LinearLayout(c)
-        rowC.orientation = LinearLayout.HORIZONTAL
-        add(rowC, "Open app") { openApp() }
-        add(rowC, "Hide") { hide() }
-        pn.addView(rowA)
-        pn.addView(rowB)
-        pn.addView(rowC)
+        ))
+        pn.addView(addRow(
+            "\u2328 Key" to { showForm(Step(StepType.KEY, key = "a", durationMs = 60)) { addStep(it) } },
+            "\uD83D\uDCDD Text" to { showForm(Step(StepType.TEXT, text = "")) { addStep(it) } },
+            "\u23F1 Wait" to { showForm(Step(StepType.WAIT, durationMs = 1000, delayMs = 0)) { addStep(it) } },
+            "\u21A9 Undo" to { undoStep() }
+        ))
+        pn.addView(addRow(
+            "Open app" to { openApp() },
+            "Hide panel" to { hide() }
+        ))
         r.addView(pn)
 
         wm.addView(r, params)
@@ -194,16 +209,81 @@ class FloatingUi(private val svc: AccessibilityService) {
         }
     }
 
+    private fun addStep(step: Step) {
+        val script = Store.current()
+        script.steps.add(step)
+        Store.save()
+        toast("Step #${script.steps.size} added: ${step.title()}")
+        refresh()
+    }
+
+    private fun undoStep() {
+        val script = Store.current()
+        if (script.steps.isEmpty()) {
+            toast("No steps to undo")
+        } else {
+            val removed = script.steps.removeAt(script.steps.size - 1)
+            Store.save()
+            toast("Removed: ${removed.title()}")
+            refresh()
+        }
+    }
+
     private fun quickAdd(mode: PickMode, make: (PickResult) -> Step) {
-        startPick(mode, 0) { res ->
-            if (res != null) {
-                val step = make(res)
-                val script = Store.current()
-                script.steps.add(step)
-                Store.save()
-                toast("Step #${script.steps.size} added: ${step.title()}")
+        startPick(mode, 0) { res -> if (res != null) addStep(make(res)) }
+    }
+
+    // ---- step form shown on top of the current app ----
+    private fun showForm(base: Step, onSave: (Step) -> Unit) {
+        closeForm()
+        val c: Context = svc
+        val ed = StepEditor(svc, base) { mode, cb ->
+            form?.visibility = View.GONE
+            startPick(mode, 0) { res ->
+                form?.visibility = View.VISIBLE
+                if (res != null) cb(res)
             }
         }
+        val overlay = FrameLayout(c)
+        overlay.setBackgroundColor(Color.parseColor("#B3000000"))
+        val card = LinearLayout(c)
+        card.orientation = LinearLayout.VERTICAL
+        card.background = c.rounded(Pal.CARD, 16)
+        val head = LinearLayout(c)
+        head.orientation = LinearLayout.HORIZONTAL
+        head.gravity = Gravity.CENTER_VERTICAL
+        head.setPadding(c.dp(12), c.dp(12), c.dp(12), c.dp(8))
+        head.addView(c.chip("Cancel", Pal.FIELD) { closeForm() })
+        val t = c.label(base.type.icon + " " + base.type.label, 16f, Pal.TEXT, true)
+        t.gravity = Gravity.CENTER
+        head.addView(t, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        head.addView(c.chip("Add step", Pal.GREEN) {
+            val s = ed.commit()
+            closeForm()
+            onSave(s)
+        })
+        card.addView(head)
+        card.addView(ed.view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        val clp = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+        clp.setMargins(c.dp(14), c.dp(40), c.dp(14), c.dp(24))
+        overlay.addView(card, clp)
+        val p = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            0,
+            PixelFormat.TRANSLUCENT
+        )
+        p.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        root?.visibility = View.GONE
+        wm.addView(overlay, p)
+        form = overlay
+    }
+
+    private fun closeForm() {
+        form?.let { try { wm.removeView(it) } catch (e: Exception) { } }
+        form = null
+        root?.visibility = View.VISIBLE
     }
 
     // ---- picker ----
@@ -243,7 +323,7 @@ class FloatingUi(private val svc: AccessibilityService) {
     private fun closePicker() {
         picker?.let { try { wm.removeView(it) } catch (e: Exception) { } }
         picker = null
-        root?.visibility = View.VISIBLE
+        root?.visibility = if (form != null) View.GONE else View.VISIBLE
     }
 }
 

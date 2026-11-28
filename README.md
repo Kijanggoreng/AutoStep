@@ -1,189 +1,299 @@
-# AutoStep - Auto Clicker / Macro untuk Android
+# AutoStep
 
-App Android (Kotlin, tanpa root) buat otomatisasi **step by step**: tap, tap random, hold (bisa selamanya),
-swipe, input keyboard (huruf / angka / simbol, fixed atau random, bisa di-hold), semua dengan jeda
-per step dan tampil **mengambang di atas app lain**.
+**A free, open-source macro / auto-clicker for Android.** Record taps, random taps, holds (even "forever"),
+swipes and keyboard key presses, then replay them step by step on top of any app or game - with a floating
+control panel. No root. No ads. No internet permission.
 
-> Dibuat buat auto-farm game. Cek aturan (ToS) game kamu dulu - banyak game melarang automation
-> dan bisa banned.
+> **Heads-up:** automating games can break their rules and get your account banned. Use it on things you are
+> allowed to automate, and at your own risk.
 
 ---
 
-## Fitur
+## Contents
+- [Features](#features)
+- [Install](#install)
+- [If Google Play Protect blocks the install](#if-google-play-protect-blocks-the-install)
+- [First-time setup (2 minutes)](#first-time-setup-2-minutes)
+- [How to use](#how-to-use)
+- [Step types](#step-types)
+- [Keyboard input (optional)](#keyboard-input-optional)
+- [Limitations](#limitations)
+- [Troubleshooting](#troubleshooting)
+- [Privacy and permissions](#privacy-and-permissions)
+- [Build from source](#build-from-source)
+- [Publishing a release (maintainers)](#publishing-a-release-maintainers)
+- [Project structure](#project-structure)
+- [Contributing](#contributing) / [License](#license)
 
-| Fitur | Keterangan |
+---
+
+## Features
+
+| | |
 |---|---|
-| Tap | Koordinat X,Y + optional random offset +-px |
-| Random tap | Tap di titik acak dalam area (kotak) yang kamu gambar |
-| Hold | Tahan jari di satu titik: durasi tetap, **random range**, atau **forever** (sampai Stop) |
-| Swipe | Dari titik A ke B, durasi bisa diatur |
-| Keyboard key | 1 tombol: fixed (`a`, `A`, `5`, `@`, `ENTER`, `LEFT`, `F5`...) atau **random** huruf / angka / simbol / any |
-| Hold key | Contoh: step 68 = tahan `A` selama 38 detik (`38000` ms) atau forever |
-| Type text | Ketik teks per karakter |
-| Wait | Diam sekian ms (bisa random range) |
-| Per step | Repeat xN, jeda setelah step (fixed / random range), enable/disable |
-| Script | Banyak script, loop N kali atau 0 = infinite, start delay (waktu pindah ke game) |
-| Floating panel | Tombol Run/Stop mengambang + rekam step dengan tap langsung di layar game |
-| Picker | Layar transparan: tap titik / gambar kotak / drag swipe -> koordinat otomatis |
+| **Tap** | One exact spot, with optional random offset (+/- px) |
+| **Random tap** | A random spot inside an area you draw on screen |
+| **Hold** | Press and hold for a fixed time, a random range, or **forever** (until Stop) |
+| **Swipe** | Drag from point A to point B, any speed |
+| **Key press** | One key (letter, digit, symbol, ENTER, arrows, F1-F12...), **fixed or random** (letter / digit / symbol / any), can be **held** (e.g. hold `A` for 38 s) |
+| **Type text** | Types a string character by character |
+| **Wait** | Pause for a fixed or random time |
+| **Per step** | Repeat N times, pause afterwards (fixed or random), enable / disable |
+| **Scripts** | Multiple scripts, repeat once / N times / forever, start delay |
+| **Floating panel** | Draggable Run / Stop button over any app, and add steps without leaving your game |
+| **Coordinate picker** | Touch the screen to choose a point, draw an area, or drag a swipe - no typing coordinates |
 
 ---
 
-## Cara pakai (di HP)
+## Install
 
-### 1. Install APK
-Lihat bagian **Cara dapat APK** di bawah.
+1. Go to the **[Releases](../../releases)** page and download `AutoStep-vX.Y.Z.apk` on your phone.
+   (Optional: compare its SHA-256 with `SHA256SUMS.txt` from the same release.)
+2. Open the APK. Android asks you to allow installing from your browser / file manager - allow it.
+3. Follow [First-time setup](#first-time-setup-2-minutes).
 
-Android 13+: kalau tombol Accessibility abu-abu ("Restricted setting"), buka
-**Settings > Apps > AutoStep > titik tiga (kanan atas) > Allow restricted settings**, lalu ulangi.
-
-### 2. Setup (kartu "Setup" di app)
-1. **Accessibility service** -> Settings -> cari **AutoStep** -> ON. (Dipakai buat tap/hold/swipe + floating panel.)
-2. **Keyboard** (hanya kalau pakai step Key/Text):
-   - `Enable` -> nyalakan **AutoStep Keyboard**.
-   - `Select` -> pilih **AutoStep Keyboard** jadi keyboard aktif.
-3. Floating panel muncul otomatis setelah accessibility ON (`Show/Hide` di app).
-
-### 3. Bikin script
-Dua cara, boleh dicampur:
-
-**A. Rekam langsung di game (paling gampang)**
-1. Buka game. Di floating panel tekan `...` -> panel terbuka.
-2. `+Tap` / `+Random` / `+Hold` / `+Swipe` -> layar jadi gelap transparan -> tap/gambar di posisi yang kamu mau.
-3. Step otomatis masuk ke script. Edit detailnya (durasi, jeda, dll) di app AutoStep.
-
-**B. Manual di app**
-`+ Add step` -> pilih tipe -> isi angka, atau `Pick on screen (5s)` (kamu punya 5 detik pindah ke game,
-lalu picker muncul).
-
-Klik sebuah step buat edit. Tombol di kanan step: `^` naik, `v` turun, `++` duplikat, `x` hapus.
-
-### 4. Jalankan
-- Tekan **Run script** (di app) atau **Run** (floating). Setelah *Start delay* detik, script jalan.
-- **Stop** kapan saja dari floating panel.
-- `Loops = 0` -> ulang terus sampai Stop. Cocok buat farming.
-
-### Contoh script farming
-1. Tap (tombol serang) - jeda 200-400 ms (random)
-2. Random tap di area musuh - repeat x5
-3. Hold `A` 38000 ms (jalan ke kiri)
-4. Swipe (kamera) 300 ms
-5. Type text `/attack` + Key `ENTER`
-Loops = 0.
+Requires **Android 8.0 (API 26) or newer**.
 
 ---
 
-## Cara dapat APK (karena kamu belum compile)
+## If Google Play Protect blocks the install
 
-### Opsi 1 - GitHub Actions (tanpa install apa pun di PC)
-1. Buat repo baru di github.com, upload **isi** folder project ini (termasuk folder `.github`).
-2. Tab **Actions** -> workflow **Build APK** -> tunggu +-3-5 menit (atau `Run workflow`).
-3. Buka run yang hijau -> **Artifacts** -> download `AutoStep-debug-apk` -> extract -> `app-debug.apk`.
-4. Kirim ke HP, install (izinkan "install from unknown sources").
+AutoStep is installed from outside the Play Store and uses the Accessibility service (needed to tap and swipe for
+you). Google Play Protect often shows **"Blocked by Play Protect"** or **"App not installed"** for this kind of
+app, even though AutoStep contains no network code and no tracking. This is a Play Protect policy for unknown
+apps that use accessibility - it can't be "fixed" from inside the app.
 
-### Opsi 2 - Android Studio (disarankan kalau mau sering modif)
-1. Install **Android Studio** (Koala / terbaru). Pastikan **JDK 17** (bawaan Studio sudah ok).
-2. `File > Open` -> pilih folder `AutoStep`.
-   Kalau Studio minta Gradle: pilih Gradle **8.7** (atau "Use default"), lalu **Sync**.
-3. Colok HP (USB debugging ON) -> tombol **Run**; atau
-   `Build > Build Bundle(s) / APK(s) > Build APK(s)`.
-4. Hasil: `app/build/outputs/apk/debug/app-debug.apk`
+**Try this first:** on the Play Protect dialog tap **More details > Install anyway**.
 
-### Opsi 3 - Command line
-Prasyarat: JDK 17, Android SDK (platform 34, build-tools 34.0.0), env `ANDROID_HOME` diset,
-Gradle 8.7+ terinstall.
+**If there is no such button, temporarily turn Play Protect off:**
 
+1. Open the **Google Play Store** app.
+2. Tap your **profile picture** (top-right) > **Play Protect**.
+3. Tap the **gear icon** (top-right) > turn **off** *Scan apps with Play Protect*.
+4. Install the APK.
+5. **Turn Play Protect back ON right after installing** (same steps, switch it back on), so your phone is back to its
+   original protection level.
+
+> **Do this at your own risk.** Turning Play Protect off lowers your phone's protection while it is off.
+> Only install APKs you trust: download AutoStep **only from this repository's Releases page**, verify the checksum
+> if you can, and **make sure you re-enable Play Protect when you are done.** The authors are not responsible for
+> any damage, data loss or bans.
+
+(Menu names differ slightly between phone brands and Play Store versions.)
+
+---
+
+## First-time setup (2 minutes)
+
+### 1. Turn on the Accessibility service
+1. Open AutoStep. The first card says **"Step 1: turn on the accessibility service"**.
+2. Tap **Open Accessibility settings**, find **AutoStep** (often under *Downloaded apps* / *Installed apps*) and
+   switch it **ON**.
+
+### 1b. If the switch is greyed out or says "Restricted setting"
+Android 13+ blocks accessibility for apps installed outside the Play Store until you allow it. Do this once:
+
+1. In AutoStep, tap **Open Accessibility settings**, tap **AutoStep** and try to switch it on. It refuses - that's
+   expected (this attempt is what makes the next menu item appear). Go back.
+2. Open **App info** for AutoStep: long-press the AutoStep icon > **App info**
+   (or tap **Open App info** in the AutoStep help card).
+3. Tap the **three dots (top-right)** > **Allow restricted settings** > confirm.
+4. Open AutoStep again > **Open Accessibility settings** > switch **AutoStep** ON as usual.
+
+You can't "close" Settings in the middle of this - just use the Home / Back buttons and re-open things; the order
+above is what matters.
+
+### 2. (Optional) Enable the AutoStep keyboard
+Only needed for **Key press** and **Type text** steps. See [Keyboard input](#keyboard-input-optional).
+
+When accessibility is on, the **floating panel** appears over your screen.
+
+---
+
+## How to use
+
+### Fastest way: record from your game
+1. Open your game. On the floating panel tap **+ Steps** to expand it.
+2. Tap **Tap**, **Random**, **Hold** or **Swipe**. The screen dims - touch where you want it (draw an area for
+   *Random*, drag for *Swipe*). The step is added to your script.
+3. Tap **Key**, **Text** or **Wait** to add those steps; a form opens on top of your game. Choose the options and tap
+   **Add step**.
+4. Made a mistake? Tap **Undo**.
+5. Tap **Run**. You get a few seconds (start delay) to get ready. Tap **Stop** at any time.
+
+### In the app
+- **Steps list:** tap a step to edit, use the arrows to reorder, copy or delete it.
+- **+ Add step:** pick a type and fill in the form. *Pick on screen* gives you 5 seconds to switch to your game, then
+  lets you touch the exact spot.
+- **Repeat:** run the script once, a number of times, or **Forever** (until you press Stop).
+- **Scripts menu:** create, rename, delete, switch scripts and change the start delay.
+
+### Example: auto-farming loop
+1. Tap the attack button, then wait 0.2-0.4 s (random)
+2. Random tap inside the enemy area, repeat 5 times
+3. Hold the joystick (or key `A`) for 38 s
+4. Swipe to turn the camera
+5. Type `/loot`, press `ENTER`
+
+Repeat: **Forever**.
+
+---
+
+## Step types
+
+| Step | Options |
+|---|---|
+| Tap | X/Y (or pick), random offset |
+| Random tap | Area (or draw it) |
+| Hold | X/Y, seconds, "forever", random max |
+| Swipe | From/to, seconds |
+| Key press | Fixed key or random letter/digit/symbol/any, hold seconds, "forever", random max |
+| Type text | Text |
+| Wait | Seconds, random max |
+| All steps | Wait afterwards (+ random max), repeat count, enabled |
+
+Key names you can type: `ENTER`, `SPACE`, `BACKSPACE`, `TAB`, `ESC`, `UP`, `DOWN`, `LEFT`, `RIGHT`, `SHIFT`, `CTRL`,
+`ALT`, `F1`..`F12`, or any single character (`a`, `A`, `5`, `@`).
+
+---
+
+## Keyboard input (optional)
+
+Android does not let normal apps press keys in other apps. AutoStep works around this the same way keyboard apps
+do: it ships its own **keyboard** (a normal QWERTY you can type with). While it is the selected keyboard, scripts can
+send key presses and text through it to the app that is focused.
+
+1. AutoStep > **Keyboard** card > **Enable** > switch on *AutoStep Keyboard*.
+2. **Select** > choose *AutoStep Keyboard* (you can switch back any time with the globe key on the keyboard).
+3. Tap a text field (or the game) so it is focused, then run your script.
+
+**Important:** key presses only reach an app that has an input field focused or that reads key events. Most touch
+games ignore them. For games with an on-screen joystick use **Hold** / **Swipe** on the joystick instead.
+Key presses work well for chat boxes, console commands, games with keyboard support (emulators, Chromebooks, phones
+with a keyboard), and web apps.
+
+---
+
+## Limitations
+- Coordinates are screen pixels. If you rotate the phone or change display size, re-record the steps.
+- The floating panel can cover things; drag it by the handle (the three-line icon).
+- Some apps (banking, secure screens) block overlays / gestures by design.
+- Anti-cheat systems can detect accessibility-based automation.
+- Some phones (Xiaomi, Oppo, Vivo, Samsung, Tecno...) stop background services to save battery. Set AutoStep's
+  battery usage to **Unrestricted** and lock it in the Recents screen.
+- The screen stays on while the floating panel is visible.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| Accessibility switch greyed out | Follow [1b](#1b-if-the-switch-is-greyed-out-or-says-restricted-setting) |
+| Play Protect blocks install | See [this section](#if-google-play-protect-blocks-the-install) |
+| Taps land in the wrong place | Re-record after rotating or changing display size |
+| Key steps do nothing | Select *AutoStep Keyboard* and focus a text field first; see [Keyboard input](#keyboard-input-optional) |
+| After "Pick on screen" the app doesn't come back | Tap **Open app** on the floating panel |
+| Script stops by itself | Read the message that appears; disable battery restrictions for AutoStep |
+| App crashes | An **AutoStep crashed** screen appears: tap **COPY ERROR** and include it in a [bug report](../../issues) |
+
+---
+
+## Privacy and permissions
+
+- **No `INTERNET` permission** - the app cannot send data anywhere. Scripts are stored only on your phone
+  (`scripts.json` in the app's private storage).
+- **Accessibility service** - used only to perform the gestures you scripted and to show the floating panel. The code
+  ignores all screen content and accessibility events (`onAccessibilityEvent` is empty).
+- **Keyboard (optional)** - only sends what your script says. Do not use it for passwords; switch back to your usual
+  keyboard when you are done.
+- No analytics, ads, trackers or third-party SDKs (the only dependency is `androidx.core`).
+- Audit it yourself: the whole app is ~2,000 lines of Kotlin in `app/src/main/java/com/autostep/app/`.
+
+---
+
+## Build from source
+
+Requirements: **JDK 17**, **Android SDK** (platform 34), Gradle 8.7+ (or Android Studio).
+
+### Android Studio
+1. Install Android Studio (JDK 17 is bundled).
+2. **File > Open** the project folder and let it **Sync**.
+3. Plug in a phone with USB debugging, press **Run**, or **Build > Build APK(s)**.
+
+### Command line
 ```bash
-# sekali saja: bikin gradle wrapper
-gradle wrapper --gradle-version 8.7
-
-# build APK debug
-./gradlew assembleDebug
-# hasil: app/build/outputs/apk/debug/app-debug.apk
-
-# install ke HP (adb)
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+gradle wrapper --gradle-version 8.7   # once; generates ./gradlew (commit it if you like)
+./gradlew assembleDebug               # -> app/build/outputs/apk/debug/app-debug.apk
+./gradlew installDebug                # install on a connected phone
 ```
-Build release (tetap ditandatangani debug key biar bisa langsung diinstall): `./gradlew assembleRelease`.
 
-### Compile ulang setelah modif
-Ubah kode di `app/src/main/java/com/autostep/app/` -> jalankan lagi salah satu opsi di atas.
-Naikkan `versionCode` di `app/build.gradle.kts` kalau mau update tanpa uninstall.
-APK debug dengan debug key yang sama bisa di-install menimpa versi lama.
+### GitHub Actions
+Every push / pull request builds a debug APK (`.github/workflows/build.yml`); download it from the run's
+**Artifacts**.
+
+### After modifying the code
+Edit files in `app/src/main/java/com/autostep/app/`, run `./gradlew assembleDebug` again and install the new APK
+over the old one (same signing key = no uninstall needed). Bump `versionCode` / `versionName` in
+`app/build.gradle.kts` for releases.
 
 ---
 
-## Struktur project
+## Publishing a release (maintainers)
+
+1. **(Recommended) Create a release keystore once** and keep it safe - losing it means users must uninstall to update:
+   ```bash
+   keytool -genkeypair -v -keystore release.jks -alias autostep -keyalg RSA -keysize 4096 -validity 36500
+   base64 -w0 release.jks     # copy the output
+   ```
+2. In your GitHub repo: **Settings > Secrets and variables > Actions**, add `KEYSTORE_BASE64` (the base64 text),
+   `KEYSTORE_PASSWORD`, `KEY_ALIAS` (`autostep`), `KEY_PASSWORD`.
+   *(Skip this and the release APK is signed with the debug key - fine for testing.)*
+3. Update `versionCode`, `versionName` and `CHANGELOG.md`, commit, then:
+   ```bash
+   git tag v1.1.0 && git push origin v1.1.0
+   ```
+4. The **Release** workflow builds the APK and attaches `AutoStep-v1.1.0.apk` + `SHA256SUMS.txt` to a new release.
+
+---
+
+## Project structure
 
 ```
 AutoStep/
-  README.md   CLAUDE.md
+  README.md  CLAUDE.md  CHANGELOG.md  CONTRIBUTING.md  LICENSE
   settings.gradle.kts  build.gradle.kts  gradle.properties
-  .github/workflows/build.yml          # build APK otomatis di GitHub
+  .github/workflows/build.yml      # debug APK on every push/PR
+  .github/workflows/release.yml    # tag vX.Y.Z -> GitHub Release with APK
   app/
-    build.gradle.kts                   # minSdk 26, targetSdk 34, Kotlin 1.9.24, AGP 8.5.2
+    build.gradle.kts               # minSdk 26, target/compile 34, Kotlin 1.9.24, AGP 8.5.2
     src/main/AndroidManifest.xml
-    src/main/res/xml/accessibility_config.xml   # canPerformGestures=true
-    src/main/res/xml/method.xml                 # deklarasi IME
+    src/main/res/xml/accessibility_config.xml
     src/main/java/com/autostep/app/
-      MainActivity.kt            # UI utama + editor step (dibuat programatik, tanpa XML layout)
-      AutoAccessibilityService.kt# dispatchGesture: tap, hold (chained stroke), swipe
-      FloatingUi.kt              # panel mengambang + PickerView (pilih koordinat)
-      AutoKeyboardService.kt     # IME: inject key event & teks via InputConnection
-      Keys.kt                    # KeyInjector: random key, hold key, shift/simbol
-      Engine.kt                  # eksekusi script (thread), loop, jeda, random
-      Model.kt                   # Step, Script, enum, JSON
-      Store.kt                   # simpan script ke filesDir/scripts.json
-      Ui.kt                      # warna & helper view
+      MainActivity.kt              # home screen, onboarding, help, step list
+      StepEditor.kt                # step form (used in app dialog AND floating overlay)
+      FloatingUi.kt                # floating panel, coordinate picker, overlay form
+      AutoAccessibilityService.kt  # tap / hold / swipe via dispatchGesture
+      AutoKeyboardService.kt       # QWERTY keyboard + key/text injection point
+      Keys.kt                      # KeyInjector: random keys, held keys, shift/symbols
+      Engine.kt                    # runs a script (loops, repeats, random delays)
+      Model.kt  Store.kt           # data classes, JSON storage
+      App.kt  CrashActivity.kt     # crash reporter screen
+      Ui.kt                        # colours + view helpers
 ```
 
-## Cara kerja (singkat)
-- **Tap/Hold/Swipe**: `AccessibilityService.dispatchGesture`. Hold panjang/infinite dikirim sebagai
-  rantai stroke 1 detik dengan `willContinue=true` jadi jari tidak "lepas" sampai selesai / Stop.
-- **Floating panel**: window `TYPE_ACCESSIBILITY_OVERLAY` (tidak perlu izin "Display over other apps").
-- **Keyboard**: `InputMethodService` sendiri. `InputConnection.sendKeyEvent` kirim `ACTION_DOWN`
-  (diulang dengan `repeatCount++` selama hold) lalu `ACTION_UP`. Huruf besar/simbol dipetakan lewat
-  `KeyCharacterMap` (otomatis tambah SHIFT).
+How it works: taps/holds/swipes use `AccessibilityService.dispatchGesture` (long holds are chained 1-second strokes
+with `willContinue`, so the finger never lifts); the overlay uses `TYPE_ACCESSIBILITY_OVERLAY` (no "draw over
+other apps" permission); key presses go through the keyboard's `InputConnection.sendKeyEvent` (DOWN, repeated DOWN
+with increasing `repeatCount`, then UP).
 
 ---
 
-## Batasan penting (jujur)
-1. **Key/Text hanya masuk ke app yang punya input field fokus** dan sedang memakai AutoStep Keyboard.
-   Game yang tidak punya text field / tidak baca key event (kebanyakan game touch) **tidak akan
-   merespon** tombol "A" hold. Kalau game kamu pakai kontrol touch (joystick virtual), pakai step **Hold**
-   di posisi joystick / **Swipe** - bukan Key. Key cocok untuk: chat/ketik command, game dengan dukungan
-   keyboard (mis. di emulator / Chromebook / HP + keyboard).
-2. Tap di titik yang tertutup floating panel akan kena panel - geser panel (drag `::`).
-3. Game dengan anti-cheat bisa mendeteksi accessibility/auto-click.
-4. Beberapa app (bank, layar secure) memblokir gesture/overlay.
-5. Hemat baterai/OEM (Xiaomi, Oppo, Vivo, Samsung) kadang mematikan service: set Battery -> *No restrictions*
-   dan kunci app di Recents.
-6. Layar tetap menyala selama floating panel tampil (flag keep-screen-on).
+## Contributing
+Issues and pull requests are welcome - see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Troubleshooting
-Kalau app crash, muncul layar **AutoStep crashed** -> tekan **COPY ERROR** -> kirim ke Claude.
+## License
+[MIT](LICENSE). AutoStep is not affiliated with or endorsed by Google. "Play Protect" and "Android" are trademarks of
+Google LLC.
 
-| Masalah | Solusi |
-|---|---|
-| Accessibility tidak bisa di-ON | Allow restricted settings (lihat atas) |
-| Tap tidak kena | Resolusi/rotasi beda dari saat rekam; rekam ulang. Coordinate = piksel layar penuh |
-| Key tidak jalan | Pastikan "Keyboard selected" ON dan field fokus (keyboard bar AutoStep muncul) |
-| Setelah Pick, app tidak balik sendiri | Android blok buka app dari background: tekan `Open app` di floating panel |
-| Script berhenti sendiri | Lihat toast error; atau service dimatikan OEM |
-
-## Referensi yang dipakai
-- eci99/Clicker - overlay + `dispatchGesture` (github.com/eci99/Clicker)
-- Kiyoscripts/CosmoClicker - interval/loop/preset (github.com/Kiyoscripts/CosmoClicker)
-- ryanuo/mdot - multi-point floating clicker (github.com/ryanuo/mdot)
-- kemw/android-mouse-cursor - accessibility + overlay (github.com/kemw/android-mouse-cursor)
-- Android docs "Create an input method" - `InputConnection.sendKeyEvent`
-- rustdesk PR #6097 - contoh kirim `KeyEvent` lewat IME `InputConnection`
-
-### Claude skills untuk Android (buat dipakai di Claude Code)
-- Drjacky/claude-android-ninja - Kotlin + Compose
-- dpconde/claude-android-skill - arsitektur ala NowInAndroid
-- chrisbanes/skills - skill Kotlin/Compose/Android
-- android/skills (resmi Google) lewat Android CLI, atau `claude mcp add android-skills -- npx -y android-skills-mcp`
-- Lightrion/skills - skill AOSP/Android app development
-
-Pasang (contoh): `git clone https://github.com/Drjacky/claude-android-ninja ~/.claude/skills/claude-android-ninja`
-(atau taruh di `.claude/skills/` di dalam project ini).
+## Credits / inspiration
+Open-source autoclickers and docs that informed the design: eci99/Clicker, Kiyoscripts/CosmoClicker, ryanuo/mdot,
+kemw/android-mouse-cursor, and the Android "Create an input method" documentation.

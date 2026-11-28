@@ -5,6 +5,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -54,4 +57,40 @@ fun Context.card(): LinearLayout = LinearLayout(this).apply {
     orientation = LinearLayout.VERTICAL
     setPadding(dp(16), dp(14), dp(16), dp(14))
     background = rounded(Pal.CARD, 16)
+}
+
+/** Small pill used for quick actions and option selectors. */
+fun Context.chip(text: String, color: Int = Pal.FIELD, onClick: () -> Unit): TextView =
+    TextView(this).apply {
+        this.text = text
+        textSize = 12f
+        setTextColor(Color.WHITE)
+        setTypeface(typeface, Typeface.BOLD)
+        gravity = Gravity.CENTER
+        setPadding(dp(10), dp(7), dp(10), dp(7))
+        background = rounded(color, 10)
+        isClickable = true
+        setOnClickListener { onClick() }
+    }
+
+/** Horizontal single-choice selector. selected = -1 means nothing highlighted. */
+fun Context.chipRow(labels: List<String>, selected: Int, onSelect: (Int) -> Unit): View {
+    val row = LinearLayout(this)
+    row.orientation = LinearLayout.HORIZONTAL
+    val views = mutableListOf<TextView>()
+    fun paint(sel: Int) {
+        views.forEachIndexed { i, v -> v.background = rounded(if (i == sel) Pal.ACCENT else Pal.FIELD, 10) }
+    }
+    labels.forEachIndexed { i, l ->
+        val v = chip(l, Pal.FIELD) { paint(i); onSelect(i) }
+        views.add(v)
+        val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        lp.rightMargin = dp(6)
+        row.addView(v, lp)
+    }
+    paint(selected)
+    val hs = HorizontalScrollView(this)
+    hs.isHorizontalScrollBarEnabled = false
+    hs.addView(row)
+    return hs
 }
