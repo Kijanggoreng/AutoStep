@@ -127,7 +127,7 @@ class AutoKeyboardService : InputMethodService() {
         if (ei != null && !noEnterAction &&
             action != EditorInfo.IME_ACTION_NONE && action != EditorInfo.IME_ACTION_UNSPECIFIED
         ) {
-            performEditorAction(action)
+            currentInputConnection?.performEditorAction(action)
         } else {
             sendDownUpKeyEvents(KeyEvent.KEYCODE_ENTER)
         }
